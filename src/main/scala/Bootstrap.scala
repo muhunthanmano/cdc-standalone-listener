@@ -1,12 +1,13 @@
 package org.mu.stream
 
-import com.typesafe.scalalogging._
+import com.typesafe.scalalogging.*
 import org.slf4j.LoggerFactory
-import scala.jdk.CollectionConverters._
-import akka.actor.AddressFromURIString
 
+import scala.jdk.CollectionConverters.*
+import akka.actor.AddressFromURIString
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import org.mu.stream.actors.Factory
 
 object Bootstrap  extends  App {
 
@@ -16,4 +17,6 @@ object Bootstrap  extends  App {
   val seedNodePorts = ConfigFactory.load().getStringList("akka.cluster.seed-nodes").asScala.flatMap {
     case AddressFromURIString(s) => s.port
   }
+
+  Factory
 }
