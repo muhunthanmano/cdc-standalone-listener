@@ -8,6 +8,11 @@ import akka.actor.AddressFromURIString
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.mu.stream.actors.Factory
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.Behavior
+import com.typesafe.config.ConfigFactory
+import org.mu.stream.actors.cluster.ClusterListener
 
 object Bootstrap  extends  App {
 
@@ -18,5 +23,35 @@ object Bootstrap  extends  App {
     case AddressFromURIString(s) => s.port
   }
 
-  Factory
+  object RootBehavior {
+    def apply(): Behavior[Nothing] = Behaviors.setup[Nothing] { context =>
+      // Create an actor that handles cluster domain events
+      context.spawn(ClusterListener(), "ClusterListener")
+
+      Behaviors.empty
+    }
+  }
+
+  def startup(port: Int): Unit = {
+    // Override the configuration of the port
+    val config = ConfigFactory.parseString(
+      s"""
+      akka.remote.artery.canonical.port=$port
+      """).withFallback(ConfigFactory.load())
+
+    // Create an Akka system
+    ActorSystem[Nothing](RootBehavior(), "ClusterSystem", config)
+  }
+
+  def init(): Unit = {
+    val ports = Seq(25251, 25252, 0)
+
+    ports.foreach(startup)
+  }
+
+  init()
+
+
+
+//  Factory
 }
